@@ -21,8 +21,12 @@ class Users(AbstractUser):
         ("patient", "Пациент"),
     )
 
-    role = models.CharField(choices=ROLE_CHOICES, default="patient")
-    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    role = models.CharField("Роль", choices=ROLE_CHOICES, default="patient")
+    first_name = models.CharField("Имя", max_length=150, blank=True)
+    last_name = models.CharField("Фамилия", max_length=150, blank=True)
+    middle_name = models.CharField("Отчество", max_length=100, blank=True, null=True)
+    email = models.EmailField("email", blank=True)
+    username = models.CharField("Логин (не обязательно)", max_length=150, unique=True, null=True, blank=True)
 
     def __str__(self):
         if self.middle_name:
@@ -39,8 +43,8 @@ class Doctors(models.Model):
         limit_choices_to={"role": "doctor"},
     )
     clinics = models.ManyToManyField(Clinics, related_name="doctors")
-    specialization = models.CharField(max_length=100)
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    specialization = models.CharField("Специальность", max_length=100)
+    phone = models.CharField("Телефон", max_length=15, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.specialization}"
@@ -53,7 +57,7 @@ class Patients(models.Model):
         related_name="patient",
         limit_choices_to={"role": "patient"},
     )
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    phone = models.CharField("Телефон", max_length=15, blank=True, null=True)
 
     def __str__(self):
         return str(self.user)
@@ -68,9 +72,9 @@ class Consultations(models.Model):
         ("paid", "Оплачена"),
     )
 
-    doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE, related_name="consultations")
-    patient = models.ForeignKey(Patients, on_delete=models.CASCADE, related_name="consultations")
-    clinic = models.ForeignKey(Clinics, on_delete=models.CASCADE, related_name="consultations")
+    doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE, related_name="consultations", verbose_name="Врач")
+    patient = models.ForeignKey(Patients, on_delete=models.CASCADE, related_name="consultations", verbose_name="Пациент")
+    clinic = models.ForeignKey(Clinics, on_delete=models.CASCADE, related_name="consultations", verbose_name="Клиника")
 
     start_time = models.DateTimeField("Дата и время консультации", blank=False, null=False)
     end_time = models.DateTimeField("Время окончания консультации", blank=True, null=True)
