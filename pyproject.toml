@@ -13,5 +13,15 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "flake8>=7.2.0",
+    "flake8-pyproject>=1.2.3",
     "pytest>=8.4.0",
+]
+
+[tool.flake8]
+max-line-length = 120
+exclude = [
+    ".venv",
+    "__pycache__",
+    ".git"
 ]
