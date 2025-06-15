@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file:
+      - .env.prod
+    command: [ "/bin/sh", "-c", "uv run manage.py migrate && uv run gunicorn --bind 0.0.0.0:8080 --workers 3 SWGroup.wsgi:application" ]
+
+  db:
+    image: "postgres:17-alpine"
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
