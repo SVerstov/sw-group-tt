@@ -10,6 +10,7 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.1.0",
     "gunicorn>=23.0.0",
+    "djangorestframework-simplejwt>=5.5.0",
 ]
 
 [dependency-groups]
@@ -17,6 +18,7 @@ dev = [
     "flake8>=7.2.0",
     "flake8-pyproject>=1.2.3",
     "pytest>=8.4.0",
+    "pytest-django>=4.11.1",
 ]
 
 [tool.flake8]
