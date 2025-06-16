@@ -1,18 +1,20 @@
 # Create your tests here.
 # tests/test_api.py
+from datetime import datetime
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework.test import APIClient
 
-from mis.models import Doctors, Patients, Clinics
+from mis.models import Doctors, Patients, Clinics, Users, Consultations
 
 import random
 
 
 @pytest.fixture
 def create_user():
-    def _create_user(role="patient", password=None):
+    def _create_user(role="patient", password=None) -> Users:
         first_names = ["Alex", "Sam", "Chris", "Jordan", "Taylor"]
         last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones"]
         middle_names = ["Lee", "Pat", "Ray", "Drew", "Sky"]
@@ -67,6 +69,21 @@ def api_client_with_token(create_user):
     return _create_api_client
 
 
+@pytest.mark.django_db
+def test_role_access(api_client_with_token):
+    client_patient, _ = api_client_with_token("patient")
+    response = client_patient.get("/api/consultations/")
+    assert response.status_code == 403
+    response = client_patient.get("/api/users/")
+    assert response.status_code == 403
+
+    client_admin, admin = api_client_with_token("admin")
+    response = client_admin.get("/api/consultations/")
+    assert response.status_code == 200
+    response = client_admin.get("/api/users/")
+    assert response.status_code == 200
+
+
 @pytest.fixture
 def doctor(create_user):
     user = create_user(role="doctor")
@@ -74,14 +91,60 @@ def doctor(create_user):
 
 
 @pytest.fixture
+def create_doctor(create_user):
+    def _create_doctor(specialization="Терапевт") -> Doctors:
+        user = create_user(role="doctor")
+        return Doctors.objects.create(user=user, specialization=specialization)
+
+    return _create_doctor
+
+
+@pytest.fixture
 def patient(create_user):
     user = create_user(role="patient")
-    return Patients.objects.create(user=user, phone="+79001234567")
+    return Patients.objects.create(user=user, phone=f"+7{random.randint(1000000000, 9999999999)}")
+
+
+@pytest.fixture
+def create_patient(create_user):
+    def _create_patient(phone=None) -> Patients:
+        user = create_user(role="patient")
+        phone = phone or f"+7{random.randint(1000000000, 9999999999)}"
+        return Patients.objects.create(user=user, phone=phone)
+
+    return _create_patient
 
 
 @pytest.fixture
 def clinic():
     return Clinics.objects.create(name="Клиника 1", legal_address="Юр. адрес", actual_address="Физ. адрес")
+
+
+@pytest.fixture
+def create_clinic():
+    def _create_clinic() -> Clinics:
+        name = f"Клиника {get_random_string(5)}"
+        legal_address = f"Юр адрес {get_random_string(10)}"
+        actual_address = f"Физический адрес {get_random_string(10)}"
+        return Clinics.objects.create(name=name, legal_address=legal_address, actual_address=actual_address)
+
+    return _create_clinic
+
+
+@pytest.fixture
+def create_consultation():
+    def _create_consultation(
+        start_time: datetime,
+        doctor: Doctors,
+        patient: Patients,
+        clinic: Clinics,
+        status="waiting",
+    ) -> Consultations:
+        return Consultations.objects.create(
+            doctor=doctor, patient=patient, clinic=clinic, start_time=start_time, status=status
+        )
+
+    return _create_consultation
 
 
 # tests/test_api.py
