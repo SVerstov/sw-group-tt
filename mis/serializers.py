@@ -73,4 +73,4 @@ class DoctorSerializer(serializers.ModelSerializer):
 class ConsultationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Consultations
-        fields = ("doctor", "patient", "clinic", "start_time", "end_time", "status", "notes")
+        fields = ("doctor", "patient", "clinic", "start_time", "end_time", "status", "created_at", "notes")

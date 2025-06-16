@@ -1,6 +1,8 @@
 # Create your views here.
+from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 from mis.models import Consultations
 from mis import serializers, models
@@ -44,8 +46,10 @@ class ConsultationViewSet(viewsets.ModelViewSet):
     queryset = models.Consultations.objects.all()
     serializer_class = serializers.ConsultationsSerializer
     permission_classes = [IsAdmin]
-    filterset_fields = ["status", "doctor__user__last_name", "patient__user__last_name"]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "created_at", "doctor__user__last_name", "patient__user__last_name"]
     search_fields = ["doctor__user__last_name", "patient__user__last_name"]
+    ordering_fields = ['created_at', 'start_time']
 
     @action(detail=True, methods=["post"])
     def change_status(self, request, pk=None):

@@ -23,5 +23,5 @@ from django.urls.conf import include
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("mis.urls")),
-    path("/", lambda request: redirect("/api/")),
+    path("", lambda request: redirect("/api/")),
 ]

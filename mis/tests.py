@@ -201,3 +201,56 @@ def test_update_consultation_data(api_client_with_token, create_doctor, create_c
     consultation.refresh_from_db()
     assert consultation.status == new_data["status"]
     assert consultation.doctor.id == new_data["doctor"]
+
+
+@pytest.fixture
+@pytest.mark.django_db
+def create_bunch_consultation(create_consultation, create_doctor, patient, clinic):
+    doc1 = create_doctor()
+    doc1.user.last_name = "Иванов"
+    doc1.user.save()
+    doc2 = create_doctor()
+    doc2.user.last_name = "Петров"
+    doc2.user.save()
+    for i, status in enumerate(["waiting", "confirmed", "started", "finished", "paid"]):
+        create_consultation(
+            start_time=datetime.now() + timedelta(days=i),
+            doctor=doc1 if i % 2 == 0 else doc2,
+            patient=patient,
+            clinic=clinic,
+            status=status,
+        )
+
+
+@pytest.mark.django_db
+def test_filter_consultations_by_status(api_client_with_token, create_bunch_consultation):
+    client, user = api_client_with_token(role="admin")
+    response = client.get("/api/consultations/?status=waiting")
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["status"] == "waiting"
+
+
+@pytest.mark.django_db
+def test_search_consultations_by_doctor_lastname(api_client_with_token, create_bunch_consultation):
+    client, user = api_client_with_token(role="admin")
+    response = client.get("/api/consultations/?search=Иванов&search_type=doctor")
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 3
+    response = client.get("/api/consultations/?search=Петров&search_type=doctor")
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 2
+
+
+@pytest.mark.django_db
+def test_order_consultations_by_start_time(api_client_with_token, create_bunch_consultation):
+    client, user = api_client_with_token(role="admin")
+    # ASC order
+    response = client.get("/api/consultations/?ordering=start_time")
+    result = response.data["results"]
+    assert datetime.fromisoformat(result[0]["start_time"]) < datetime.fromisoformat(result[1]["start_time"])
+
+    # DESC order
+    response = client.get("/api/consultations/?ordering=-start_time")
+    result = response.data["results"]
+    assert datetime.fromisoformat(result[0]["start_time"]) > datetime.fromisoformat(result[1]["start_time"])
