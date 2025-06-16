@@ -28,3 +28,6 @@ exclude = [
     "__pycache__",
     ".git"
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "SWGroup.settings"
