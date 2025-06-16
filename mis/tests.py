@@ -1,6 +1,6 @@
 # Create your tests here.
 # tests/test_api.py
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -134,7 +134,7 @@ def create_clinic():
 @pytest.fixture
 def create_consultation():
     def _create_consultation(
-        start_time: datetime,
+        start_time: datetime | str,
         doctor: Doctors,
         patient: Patients,
         clinic: Clinics,
@@ -147,7 +147,6 @@ def create_consultation():
     return _create_consultation
 
 
-# tests/test_api.py
 @pytest.mark.django_db
 def test_create_consultation(api_client_with_token, doctor, patient, clinic):
     client, user = api_client_with_token(role="admin")
@@ -175,3 +174,30 @@ def test_deny_create_consultation(api_client_with_token, doctor, patient, clinic
     }
     response = client.post("/api/consultations/", data)
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_update_consultation_data(api_client_with_token, create_doctor, create_consultation, patient, clinic):
+    doctor1 = create_doctor(specialization="Терапевт")
+    doctor2 = create_doctor(specialization="Хирург")
+
+    consultation = create_consultation(
+        start_time=datetime.now() + timedelta(days=1), doctor=doctor1, patient=patient, clinic=clinic, status="waiting"
+    )
+
+    client, user = api_client_with_token(role="admin")
+
+    new_data = {
+        "doctor": doctor2.id,
+        "patient": patient.id,
+        "clinic": clinic.id,
+        "start_time": "2026-06-20T10:00:00Z",
+        "status": "confirmed",
+    }
+    response = client.put(f"/api/consultations/{consultation.id}/", new_data)
+
+    assert response.status_code == 200
+
+    consultation.refresh_from_db()
+    assert consultation.status == new_data["status"]
+    assert consultation.doctor.id == new_data["doctor"]
