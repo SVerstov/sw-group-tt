@@ -6,3 +6,11 @@ repos:
         args:
           - --max-line-length=120
         exclude: ^migrations/
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest ./mis/tests.py
+        language: system
+        pass_filenames: false
+        always_run: true
