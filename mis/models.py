@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -73,12 +72,15 @@ class Consultations(models.Model):
     )
 
     doctor = models.ForeignKey(Doctors, on_delete=models.CASCADE, related_name="consultations", verbose_name="Врач")
-    patient = models.ForeignKey(Patients, on_delete=models.CASCADE, related_name="consultations", verbose_name="Пациент")
+    patient = models.ForeignKey(
+        Patients, on_delete=models.CASCADE, related_name="consultations", verbose_name="Пациент"
+    )
     clinic = models.ForeignKey(Clinics, on_delete=models.CASCADE, related_name="consultations", verbose_name="Клиника")
 
     start_time = models.DateTimeField("Дата и время консультации", blank=False, null=False)
     end_time = models.DateTimeField("Время окончания консультации", blank=True, null=True)
     status = models.CharField(choices=STATUS_CHOICES, default="waiting", max_length=30, verbose_name="Статус")
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     updated_at = models.DateTimeField("Последнее редактирование", auto_now=True)
     notes = models.TextField("Заметки", blank=True, null=True)
 
