@@ -7,5 +7,6 @@ RUN uv sync --locked
 
 RUN mv .env.prod .env
 
+RUN uv run manage.py collectstatic  --noinput
 
 
